@@ -8,21 +8,31 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+	
+	<style>
+body{
+  height: 100%;
+  margin: 0;
+}
+.bg {
+  background-image: url("../static/images/body-background.jpg");
+
+  /* Full height */
+  height: 100%; 
+
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+</style>
 </head>
 
-<body>
-<!-- <body style="background-image:url(../static/images/body-background.jpg); width: 100%; height: 100%; top: 0;
-  left: 0;"> -->
-  
-<!-- <body style="background-image:url(../static/images/body-background.jpg); no-repeat ; background-size: cover; height: 100%; overflow: hidden;">
--->
-<!-- <body style="background-image:url(../static/images/body-background.jpg);position: absolute;top: 0; 
-  left: 0; 
-  right: 0; 
-  bottom: 0; 
-  margin: auto; 
-  min-width: 50%;min-height: 50%;">
-   -->
+<body class="bg" th:src="@{images/hospital_1.jpg}">
+<div class="main-page bg d-flex flex-column flex-fill">
+    
+<!-- <div class="bg"> -->
     <div class="container-fluid">
         <div id="myCarousel" class="carousel slide" data-ride="carousel">
             <!-- Indicators -->
@@ -65,41 +75,48 @@
                 <span class="sr-only">Next</span>
             </a>
         </div>
-        <div class="row">
-            <div class="col-sm-4">
-               <div class="jumbotron card card-image" th:src="@{images/coronavirus-graphic_1.jpg}" style="background-image:url(../static/images/coronavirus-graphic_1.jpg); background-repeat: no-repeat;
-    background-position: center; -webkit-background-size: cover;">
-                    <!-- <img src="../static/images/coronavirus-graphic_1.jpg" th:src="@{images/coronavirus-graphic_1.jpg}" class="img-fluid">  -->
-                    <h3 th:text="${INFECTED_current_count}"></h3>
-                    <p>Lorem ipsum dolor..</p>
-                    <p>
-                        <a href="infected">Click here for more details</a>
-                    </p>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="jumbotron">
-                    <h3 th:text="${DEAD_current_count}"></h3>
-                    <p>Lorem ipsum dolor..</p>
-                    <p>
-                        <a href="dead">Click here for more details</a>
-                    </p>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="jumbotron">
-                    <h3 th:text="${RECOVERED_current_count}"></h3>
-                    <p>Lorem ipsum dolor..</p>
-                    <p>
-                        <a href="recovered">Click here for more details</a>
-                    </p>
-                </div>
-            </div>
-        </div>
+		
+
+		<div class="card-deck">
+		  <div class="card">
+			<img class="card-img-top" src="../static/images/coronavirus-graphic_1.jpg" th:src="@{images/coronavirus-graphic_1.jpg}" alt="Card image cap">
+			<div class="card-body">
+			  <h4 class="card-title" th:text="${INFECTED_current_count}">John Doe</h4>
+			  <p class="card-text">Card Text.</p>
+			  <a href="infected" class="btn btn-primary stretched-link">Click for more details</a>
+			  <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+			</div>
+		  </div>
+		  <div class="card">
+			<img class="card-img-top" src="../static/images/candle-light-vigil-getty-517.jpg" th:src="@{images/candle-light-vigil-getty-517.jpg}" alt="Card image cap">
+			<div class="card-body">
+			  <h4 class="card-title" th:text="${DEAD_current_count}">John Doe</h4>
+			  <p class="card-text">Card Text.</p>
+			  <a href="dead" class="btn btn-primary stretched-link">Click for more details</a>
+			   <div class="card-footer" style="background-color:#ffffff; border-color: #337ab7;">
+      <small class="text-muted">Last updated 3 mins ago</small>
     </div>
+			</div>
+		  </div>
+		  <div class="card">
+			<img class="card-img-top" src="../static/images/coronavirus-graphic_1.jpg" th:src="@{images/coronavirus-graphic_1.jpg}" alt="Card image cap">
+			<div class="card-body">
+			  <h4 class="card-title" th:text="${RECOVERED_current_count}">John Doe</h4>
+			  <p class="card-text">Card Text.</p>
+			  <a href="recovered" class="btn btn-primary stretched-link">Click for more details</a>
+			   <div class="card-footer">
+      <small class="text-muted">Last updated 3 mins ago</small>
+    </div>
+			</div>
+		  </div>
+	</div>
+    
     <div class="jumbotron">
         <a href="../home.html" th:href="@{/}">Return to home</a>
     </div>
+</div>
+	
+	</div>
 </body>
 
 </html>
