@@ -1,21 +1,26 @@
 package com.covid19.models;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PatientsStats {
 
-	PatientType getPatientType();
+    PatientType getPatientType();
 
-	int getLatestCount();
+    int getLatestCount();
 
-	void setLatestCount(final int latestCount);
+    void setLatestCount(final int latestCount);
 
-	List<Integer> getPastCounts();
+    List<Integer> getPastCounts();
 
-	void setPastCounts(final List<Integer> getpastCounts);
+    void setPastCounts(final List<Integer> getpastCounts);
 
-	int getDifferenceSincePreviousDay();
+    int getDifferenceSincePreviousDay();
 
-	void setDifferenceSincePreviousDay(final int differenceSincePreviousDay);
+    void setDifferenceSincePreviousDay(final int differenceSincePreviousDay);
+
+    LocalDateTime getUpdatedOn();
+
+    void setUpdatedOn(final LocalDateTime updatedOn);
 
 }

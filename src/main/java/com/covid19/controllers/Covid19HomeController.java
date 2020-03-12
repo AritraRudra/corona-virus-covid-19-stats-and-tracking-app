@@ -24,14 +24,11 @@ public class Covid19HomeController {
     public String homePageInfo(final Model uiModel) throws IOException, InterruptedException {
         // TODO : Maybe use retry on few types of exceptions
         List<LocationStats> stats = csvService.fetchConfirmedInfected();
-        System.out.println(" That's new: " + stats);
         fetchAndUpdateDataForUIModel(uiModel, stats, PatientType.INFECTED);
         stats = csvService.fetchConfirmedDeads();
         fetchAndUpdateDataForUIModel(uiModel, stats, PatientType.DEAD);
         stats = csvService.fetchConfirmedRecovered();
         fetchAndUpdateDataForUIModel(uiModel, stats, PatientType.RECOVERED);
-
-        System.out.println(uiModel);
         return "home";
     }
 
@@ -39,7 +36,6 @@ public class Covid19HomeController {
     public String infectedInfo(final Model uiModel) throws IOException, InterruptedException {
         // TODO : Maybe use retry on few types of exceptions
         final List<LocationStats> stats = csvService.fetchConfirmedInfected();
-        System.out.println(" That's new for infectedInfo: " + stats);
         fetchAndUpdateDataForUIModel(uiModel, stats, PatientType.INFECTED);
         return PatientType.INFECTED.name();
     }
@@ -91,17 +87,47 @@ public class Covid19HomeController {
         int newCount = 0;
         switch (patientType) {
             case DEAD:
-                newCount = stats.stream().mapToInt(newPatient -> newPatient.getDeadPatientsStats().getDifferenceSincePreviousDay()).sum();
+            	int len = stats.get(0).getDeadPatientsStats().getPastCounts().size();
+                newCount = stats.stream().mapToInt(patient -> (patient.getDeadPatientsStats().getLatestCount()
+                        - patient.getDeadPatientsStats().getPastCounts().get(len - 2))).sum();
                 break;
             case INFECTED:
-                newCount = stats.stream().mapToInt(newPatient -> newPatient.getInfectedPatientsStats().getDifferenceSincePreviousDay()).sum();
+            	len = stats.get(0).getInfectedPatientsStats().getPastCounts().size();
+                newCount = stats.stream().mapToInt(patient -> (patient.getInfectedPatientsStats().getLatestCount()
+                        - patient.getInfectedPatientsStats().getPastCounts().get(len - 2))).sum();
                 break;
             case RECOVERED:
-                newCount = stats.stream().mapToInt(newPatient -> newPatient.getRecoveredPatientsStats().getDifferenceSincePreviousDay()).sum();
+            	len = stats.get(0).getRecoveredPatientsStats().getPastCounts().size();
+                newCount = stats.stream().mapToInt(patient -> (patient.getRecoveredPatientsStats().getLatestCount()
+                        - patient.getRecoveredPatientsStats().getPastCounts().get(len - 2))).sum();
                 break;
             default:
                 throw new IllegalArgumentException("Unexpected value: " + patientType);
         }
         return newCount;
     }
+    
+	private int getNewCountByPatientTypeOld(final List<LocationStats> stats, final PatientType patientType) {
+		int newCount = 0;
+		switch (patientType) {
+		case DEAD:
+			newCount = stats.stream()
+					.mapToInt(patient -> patient.getDeadPatientsStats().getDifferenceSincePreviousDay()).sum();
+			break;
+		case INFECTED:
+			newCount = stats.stream()
+					.mapToInt(patient -> patient.getInfectedPatientsStats().getDifferenceSincePreviousDay())
+					.sum();
+			break;
+		case RECOVERED:
+			newCount = stats.stream()
+					.mapToInt(patient -> patient.getRecoveredPatientsStats().getDifferenceSincePreviousDay())
+					.sum();
+			break;
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + patientType);
+		}
+		return newCount;
+	}
+
 }

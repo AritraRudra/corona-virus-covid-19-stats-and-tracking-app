@@ -11,7 +11,7 @@ import javax.persistence.*;
 // https://stackoverflow.com/questions/40064122/jpa-hibernate-java-composite-primary-key-one-of-them-is-also-foreign-key
 @Entity
 // @Embeddable
-@Table(name = "LocationStats")
+@Table(name = "LocationStats", uniqueConstraints = { @UniqueConstraint(columnNames = { "state", "region" }) })
 public class LocationStats {
 
     @Id

@@ -1,16 +1,21 @@
 package com.covid19.models;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+
+import com.covid19.repositories.converters.StringListConverter;
 
 @Entity
 @Table(name = "dead_patients_stats")
@@ -27,7 +32,11 @@ public class DeadPatientsStats implements PatientsStats {
      * This stores dead patients count from previous days as a comma separated String in DB which is transformed and used as List in service.
      */
     @Column(name = "death_count_history", length = 10000)
-    private String pastCountsAsString;
+    @Convert(converter = StringListConverter.class)
+    private List<Integer> pastCounts;
+
+    @Column(name = "UpdatedOn")
+    private LocalDateTime updatedOn;
 
     @Transient
     private int differenceSincePreviousDay;
@@ -48,12 +57,12 @@ public class DeadPatientsStats implements PatientsStats {
 
     @Override
     public List<Integer> getPastCounts() {
-        return Stream.of(this.pastCountsAsString.split(",")).peek(s -> s.trim()).map(Integer::parseInt).collect(Collectors.toList());
+        return pastCounts;
     }
 
     @Override
     public void setPastCounts(final List<Integer> pastCounts) {
-        this.pastCountsAsString = pastCounts.toString();
+       this.pastCounts = pastCounts;
     }
 
     @Override
@@ -72,8 +81,18 @@ public class DeadPatientsStats implements PatientsStats {
     }
 
     @Override
+    public LocalDateTime getUpdatedOn() {
+        return updatedOn;
+    }
+
+    @Override
+    public void setUpdatedOn(final LocalDateTime updatedOn) {
+        this.updatedOn = updatedOn;
+    }
+
+    @Override
     public String toString() {
-        return "DeadPatientsStats [id=" + id + ", latestCount=" + latestCount + ", pastCountsAsString=" + pastCountsAsString + ", differenceSincePreviousDay=" + differenceSincePreviousDay + "]";
+        return "DeadPatientsStats [id=" + id + ", latestCount=" + latestCount + ", pastCounts=" + pastCounts + ", differenceSincePreviousDay=" + differenceSincePreviousDay + "]";
     }
 
 }
