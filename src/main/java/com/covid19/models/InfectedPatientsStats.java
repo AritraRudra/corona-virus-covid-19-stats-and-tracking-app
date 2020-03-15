@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PostLoad;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -16,7 +17,7 @@ import com.covid19.repositories.converters.StringListConverter;
 
 @Entity
 @Table(name = "infected_patients_stats")
-public class InfectedPatientsStats implements PatientsStats {
+public class InfectedPatientsStats implements PatientsStats, Comparable<InfectedPatientsStats> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
@@ -35,8 +36,14 @@ public class InfectedPatientsStats implements PatientsStats {
     @Transient
     private int differenceSincePreviousDay;
 
+    @PostLoad
+    private void calculateAndUpdateDifferenceSincePreviousDay() {
+        differenceSincePreviousDay = latestCount - pastCounts.get(pastCounts.size() - 2);
+        differenceSincePreviousDay = differenceSincePreviousDay < 0 ? 0 : differenceSincePreviousDay;
+    }
+
     public int getId() {
-        return this.id;
+        return id;
     }
 
     @Override
@@ -51,7 +58,7 @@ public class InfectedPatientsStats implements PatientsStats {
 
     @Override
     public List<Integer> getPastCounts() {
-        return this.pastCounts;
+        return pastCounts;
     }
 
     @Override
@@ -61,6 +68,7 @@ public class InfectedPatientsStats implements PatientsStats {
 
     @Override
     public int getDifferenceSincePreviousDay() {
+        calculateAndUpdateDifferenceSincePreviousDay();
         return differenceSincePreviousDay;
     }
 
@@ -86,7 +94,23 @@ public class InfectedPatientsStats implements PatientsStats {
 
     @Override
     public String toString() {
-        return "InfectedPatientsStats [id=" + id + ", latestCount=" + latestCount + ", pastCounts=" + pastCounts + ", differenceSincePreviousDay=" + differenceSincePreviousDay + "]";
+        final StringBuilder builder = new StringBuilder();
+        builder.append("InfectedPatientsStats [latestCount=");
+        builder.append(latestCount);
+        builder.append(", pastCounts=");
+        builder.append(pastCounts);
+        builder.append(", updatedOn=");
+        builder.append(updatedOn);
+        builder.append(", differenceSincePreviousDay=");
+        builder.append(differenceSincePreviousDay);
+        builder.append("]");
+        return builder.toString();
     }
 
+    @Override
+    public int compareTo(final InfectedPatientsStats otherPatient) {
+        if (otherPatient == null)
+            return 1;
+        return Integer.compare(otherPatient.latestCount, latestCount);
+    }
 }

@@ -31,14 +31,16 @@ public class CovidCsvService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CovidCsvService.class);
 
     private static String CONFIRMED_INFECTED_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv";
+
     private static String CONFIRMED_DEATHS_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv";
+
     private static String CONFIRMED_RECOVERED_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv";
 
     @Autowired
     private LocationStatsRepository locationRepo;
 
-    //@PostConstruct
-    //Timer after one minute of startup and update DB. Fetch data from DB first if available.
+    // @PostConstruct
+    // Timer after one minute of startup and update DB. Fetch data from DB first if available.
     // Invocations before will also fetch and update DB.
     // Schedule twice a day to update latest stats in DB.
     public void fetchAndSaveStats() {
@@ -46,11 +48,9 @@ public class CovidCsvService {
         try {
             locationStats = fetchAndPrepareAllData();
         } catch (IOException | InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOGGER.error("Exception occurred : ", e);
         }
         locationRepo.save(locationStats);
-
     }
 
     private LocationStats fetchAndPrepareAllData() throws IOException, InterruptedException {
@@ -70,9 +70,8 @@ public class CovidCsvService {
 
     public List<LocationStats> fetchConfirmedInfected() throws IOException, InterruptedException {
         // Check in DB if data exists and last updated in less one day. If not then fetch, update and send.
-        if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.INFECTED)) {
+        if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.INFECTED))
             return getDataFromDb();
-        }
         final HttpClient httpClient = HttpClient.newHttpClient();
         final HttpRequest request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_INFECTED_URI)).build();
         final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -80,9 +79,8 @@ public class CovidCsvService {
     }
 
     public List<LocationStats> fetchConfirmedDeads() throws IOException, InterruptedException {
-        if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.DEAD)) {
+        if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.DEAD))
             return getDataFromDb();
-        }
         final HttpClient httpClient = HttpClient.newHttpClient();
         final HttpRequest request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_DEATHS_URI)).build();
         final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -90,16 +88,16 @@ public class CovidCsvService {
     }
 
     public List<LocationStats> fetchConfirmedRecovered() throws IOException, InterruptedException {
-        if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.RECOVERED)) {
+        if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.RECOVERED))
             return getDataFromDb();
-        }
         final HttpClient httpClient = HttpClient.newHttpClient();
         final HttpRequest request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_RECOVERED_URI)).build();
         final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         return parseCSVResponse(new StringReader(response.body()), PatientType.RECOVERED);
     }
 
-    private List<LocationStats> parseCSVResponse(final StringReader stringReader, final PatientType patientType) throws IOException {
+    private List<LocationStats> parseCSVResponse(final StringReader stringReader, final PatientType patientType)
+            throws IOException {
         final Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(stringReader);
         final List<LocationStats> statsList = new ArrayList<>();
         for (final CSVRecord record : records) {
@@ -115,11 +113,10 @@ public class CovidCsvService {
         final String region = record.get("Country/Region");
         LocationStats locationStats = null;
         final List<LocationStats> tempList = locationRepo.findByStateAndRegion(state, region);
-        if (tempList == null || tempList.isEmpty()) {
+        if (tempList == null || tempList.isEmpty())
             locationStats = new LocationStats();
-        } else {
+        else
             locationStats = (tempList.get(0) == null ? new LocationStats() : tempList.get(0));
-        }
         locationStats.setState(state);
         locationStats.setRegion(region);
         updateLocationStatsByPatientsStats(record, locationStats, patientType);
@@ -127,28 +124,29 @@ public class CovidCsvService {
         return locationStats;
     }
 
-    private void updateLocationStatsByPatientsStats(final CSVRecord record, final LocationStats locationStats, final PatientType patientType) {
+    private void updateLocationStatsByPatientsStats(final CSVRecord record, final LocationStats locationStats,
+            final PatientType patientType) {
         PatientsStats patientsStats = null;
         switch (patientType) {
-            case DEAD:
+            case DEAD :
                 patientsStats = prepareAndUpdatePatientsStats(record, new DeadPatientsStats());
-                //locationStats.setInfectedPatientsStats(null);
+                // locationStats.setInfectedPatientsStats(null);
                 locationStats.setDeadPatientsStats((DeadPatientsStats) patientsStats);
-                //locationStats.setRecoveredPatientsStats(null);
+                // locationStats.setRecoveredPatientsStats(null);
                 break;
-            case INFECTED:
+            case INFECTED :
                 patientsStats = prepareAndUpdatePatientsStats(record, new InfectedPatientsStats());
                 locationStats.setInfectedPatientsStats((InfectedPatientsStats) patientsStats);
-                //locationStats.setDeadPatientsStats(null);
-                //locationStats.setRecoveredPatientsStats(null);
+                // locationStats.setDeadPatientsStats(null);
+                // locationStats.setRecoveredPatientsStats(null);
                 break;
-            case RECOVERED:
+            case RECOVERED :
                 patientsStats = prepareAndUpdatePatientsStats(record, new RecoveredPatientsStats());
-                //locationStats.setInfectedPatientsStats(null);
-                //locationStats.setDeadPatientsStats(null);
+                // locationStats.setInfectedPatientsStats(null);
+                // locationStats.setDeadPatientsStats(null);
                 locationStats.setRecoveredPatientsStats((RecoveredPatientsStats) patientsStats);
                 break;
-            default:
+            default :
                 throw new IllegalArgumentException("Unexpected value: " + patientType);
         }
     }
@@ -159,47 +157,49 @@ public class CovidCsvService {
         final int indexOfLastColumn = record.size() - 1;
 
         final int latestCount = Integer.parseInt(record.get(indexOfLastColumn));
-        final int differenceSincePreviousDay = latestCount - Integer.parseInt(record.get(indexOfLastColumn - 1)); // For newly infected locations, previous count will be 0.
+        int differenceSincePreviousDay = latestCount - Integer.parseInt(record.get(indexOfLastColumn - 1));
+        // For newly infected locations, previous count will be 0.
+        // For cured people and no newly infected, count will decrease from previous day.
+        differenceSincePreviousDay = differenceSincePreviousDay < 0 ? 0 : differenceSincePreviousDay;
         patientsStats.setLatestCount(latestCount);
         patientsStats.setDifferenceSincePreviousDay(differenceSincePreviousDay);
 
         final List<Integer> listOfDailyCount = new ArrayList<>();
-        for (int i = indexOfStartingColumn; i <= indexOfLastColumn; i++) {
+        for (int i = indexOfStartingColumn; i <= indexOfLastColumn; i++)
             listOfDailyCount.add(Integer.parseInt(record.get(i)));
-        }
         patientsStats.setPastCounts(listOfDailyCount);
         return patientsStats;
     }
 
     private List<LocationStats> getDataFromDb() {
-        return setDifferencesSincePreviousDay(locationRepo.findAll());
+        // return setDifferencesSincePreviousDay(locationRepo.findAll());
+        return locationRepo.findAll();
     }
 
-	private List<LocationStats> setDifferencesSincePreviousDay(List<LocationStats> allStats) {
-		for (LocationStats eachLocationStats : allStats) {
-			int previousIndex = eachLocationStats.getDeadPatientsStats().getPastCounts().size() - 2;
-			int diff = eachLocationStats.getDeadPatientsStats().getLatestCount()
-					- eachLocationStats.getDeadPatientsStats().getPastCounts().get(previousIndex);
-			eachLocationStats.getDeadPatientsStats().setDifferenceSincePreviousDay(diff);
+    private List<LocationStats> setDifferencesSincePreviousDay(final List<LocationStats> allStats) {
+        for (final LocationStats eachLocationStats : allStats) {
+            int previousIndex = eachLocationStats.getDeadPatientsStats().getPastCounts().size() - 2;
+            int diff = eachLocationStats.getDeadPatientsStats().getLatestCount()
+                    - eachLocationStats.getDeadPatientsStats().getPastCounts().get(previousIndex);
+            eachLocationStats.getDeadPatientsStats().setDifferenceSincePreviousDay(diff);
 
-			previousIndex = eachLocationStats.getInfectedPatientsStats().getPastCounts().size() - 2;
-			diff = eachLocationStats.getInfectedPatientsStats().getLatestCount()
-					- eachLocationStats.getInfectedPatientsStats().getPastCounts().get(previousIndex);
-			eachLocationStats.getInfectedPatientsStats().setDifferenceSincePreviousDay(diff);
+            previousIndex = eachLocationStats.getInfectedPatientsStats().getPastCounts().size() - 2;
+            diff = eachLocationStats.getInfectedPatientsStats().getLatestCount()
+                    - eachLocationStats.getInfectedPatientsStats().getPastCounts().get(previousIndex);
+            eachLocationStats.getInfectedPatientsStats().setDifferenceSincePreviousDay(diff);
 
-			previousIndex = eachLocationStats.getRecoveredPatientsStats().getPastCounts().size() - 2;
-			diff = eachLocationStats.getRecoveredPatientsStats().getLatestCount()
-					- eachLocationStats.getRecoveredPatientsStats().getPastCounts().get(previousIndex);
-			eachLocationStats.getRecoveredPatientsStats().setDifferenceSincePreviousDay(diff);
-		}
-		return allStats;
-	}
-
-	private boolean isLatestDataAvailable() {
-        final LocalDateTime latestUpdatedOn = locationRepo.findLatestUpdatedTime();
-        if (latestUpdatedOn == null) {
-            return false;
+            previousIndex = eachLocationStats.getRecoveredPatientsStats().getPastCounts().size() - 2;
+            diff = eachLocationStats.getRecoveredPatientsStats().getLatestCount()
+                    - eachLocationStats.getRecoveredPatientsStats().getPastCounts().get(previousIndex);
+            eachLocationStats.getRecoveredPatientsStats().setDifferenceSincePreviousDay(diff);
         }
+        return allStats;
+    }
+
+    private boolean isLatestDataAvailable() {
+        final LocalDateTime latestUpdatedOn = locationRepo.findLatestUpdatedTime();
+        if (latestUpdatedOn == null)
+            return false;
         final LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
         System.out.println("latestUpdatedOn: " + latestUpdatedOn + "yesterday: " + yesterday);
         return !latestUpdatedOn.isBefore(yesterday);
@@ -208,25 +208,90 @@ public class CovidCsvService {
     private boolean isLatestDataAvailableByPatientType(final PatientType patientType) {
         LocalDateTime latestUpdatedOn = null;
         switch (patientType) {
-            case DEAD:
+            case DEAD :
                 latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfDeadPatients();
                 break;
-            case INFECTED:
+            case INFECTED :
                 latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfInfectedPatients();
                 break;
-            case RECOVERED:
+            case RECOVERED :
                 latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfRecoveredPatients();
                 break;
-            default:
+            default :
                 throw new IllegalArgumentException("Unexpected value: " + patientType);
         }
 
-        if (latestUpdatedOn == null) {
+        if (latestUpdatedOn == null)
             return false;
-        }
         final LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
         System.out.println("latestUpdatedOn: " + latestUpdatedOn + "yesterday: " + yesterday);
         return !latestUpdatedOn.isBefore(yesterday);
+    }
+
+    public int getCurrentCountByPatientType(final List<LocationStats> stats, final PatientType patientType) {
+        int currentCount = 0;
+        switch (patientType) {
+            case DEAD :
+                currentCount = stats.stream().mapToInt(patient -> patient.getDeadPatientsStats().getLatestCount())
+                .sum();
+                break;
+            case INFECTED :
+                currentCount = stats.stream().mapToInt(patient -> patient.getInfectedPatientsStats().getLatestCount())
+                .sum();
+                break;
+            case RECOVERED :
+                currentCount = stats.stream().mapToInt(patient -> patient.getRecoveredPatientsStats().getLatestCount())
+                .sum();
+                break;
+            default :
+                throw new IllegalArgumentException("Unexpected value: " + patientType);
+        }
+        return currentCount;
+    }
+
+    public int getNewCountByPatientType(final List<LocationStats> stats, final PatientType patientType) {
+        int newCount = 0;
+        switch (patientType) {
+            case DEAD :
+                int len = stats.get(0).getDeadPatientsStats().getPastCounts().size();
+                newCount = stats.stream().mapToInt(patient -> (patient.getDeadPatientsStats().getLatestCount()
+                        - patient.getDeadPatientsStats().getPastCounts().get(len - 2))).sum();
+                break;
+            case INFECTED :
+                len = stats.get(0).getInfectedPatientsStats().getPastCounts().size();
+                newCount = stats.stream().mapToInt(patient -> (patient.getInfectedPatientsStats().getLatestCount()
+                        - patient.getInfectedPatientsStats().getPastCounts().get(len - 2))).sum();
+                break;
+            case RECOVERED :
+                len = stats.get(0).getRecoveredPatientsStats().getPastCounts().size();
+                newCount = stats.stream().mapToInt(patient -> (patient.getRecoveredPatientsStats().getLatestCount()
+                        - patient.getRecoveredPatientsStats().getPastCounts().get(len - 2))).sum();
+                break;
+            default :
+                throw new IllegalArgumentException("Unexpected value: " + patientType);
+        }
+        return newCount;
+    }
+
+    public int getNewCountByPatientTypeOld(final List<LocationStats> stats, final PatientType patientType) {
+        int newCount = 0;
+        switch (patientType) {
+            case DEAD :
+                newCount = stats.stream()
+                .mapToInt(patient -> patient.getDeadPatientsStats().getDifferenceSincePreviousDay()).sum();
+                break;
+            case INFECTED :
+                newCount = stats.stream()
+                .mapToInt(patient -> patient.getInfectedPatientsStats().getDifferenceSincePreviousDay()).sum();
+                break;
+            case RECOVERED :
+                newCount = stats.stream()
+                .mapToInt(patient -> patient.getRecoveredPatientsStats().getDifferenceSincePreviousDay()).sum();
+                break;
+            default :
+                throw new IllegalArgumentException("Unexpected value: " + patientType);
+        }
+        return newCount;
     }
 
 }

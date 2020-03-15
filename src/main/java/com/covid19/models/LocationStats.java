@@ -2,7 +2,17 @@ package com.covid19.models;
 
 import java.time.LocalDateTime;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 // https://stackoverflow.com/questions/13032948/how-to-create-and-handle-composite-primary-key-in-jpa
 // https://stackoverflow.com/questions/3585034/how-to-map-a-composite-key-with-hibernate
@@ -12,7 +22,7 @@ import javax.persistence.*;
 @Entity
 // @Embeddable
 @Table(name = "LocationStats", uniqueConstraints = { @UniqueConstraint(columnNames = { "state", "region" }) })
-public class LocationStats {
+public class LocationStats implements Comparable<LocationStats> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
@@ -25,15 +35,15 @@ public class LocationStats {
     private String region;
 
     // TODO : Fetch types to be updated
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = InfectedPatientsStats.class)
     @JoinColumn(name = "fk_id_infected_patients_stats")
     private InfectedPatientsStats infectedPatientsStats;
 
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = DeadPatientsStats.class)
     @JoinColumn(name = "fk_id_dead_patients_stats")
     private DeadPatientsStats deadPatientsStats;
 
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = RecoveredPatientsStats.class)
     @JoinColumn(name = "fk_id_recovered_patients_stats", referencedColumnName = "id")
     private RecoveredPatientsStats recoveredPatientsStats;
 
@@ -41,7 +51,7 @@ public class LocationStats {
     private LocalDateTime updatedOn;
 
     public int getId() {
-        return this.id;
+        return id;
     }
 
     public String getState() {
@@ -109,6 +119,14 @@ public class LocationStats {
         builder.append(updatedOn);
         builder.append("]");
         return builder.toString();
+    }
+
+    @Override
+    public int compareTo(final LocationStats otherLocation) {
+        int cmp = 0;
+        if ((cmp = state.compareTo(otherLocation.state)) == 0)
+            return region.compareTo(region);
+        return cmp;
     }
 
 }

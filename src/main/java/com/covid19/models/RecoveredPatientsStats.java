@@ -1,10 +1,7 @@
 package com.covid19.models;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -12,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PostLoad;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -19,7 +17,7 @@ import com.covid19.repositories.converters.StringListConverter;
 
 @Entity
 @Table(name = "RecoveredPatientsStats")
-public class RecoveredPatientsStats implements PatientsStats {
+public class RecoveredPatientsStats implements PatientsStats, Comparable<RecoveredPatientsStats> {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     private int id;
@@ -40,8 +38,14 @@ public class RecoveredPatientsStats implements PatientsStats {
     @Transient
     private int differenceSincePreviousDay;
 
+    @PostLoad
+    private void calculateAndUpdateDifferenceSincePreviousDay() {
+        differenceSincePreviousDay = latestCount - pastCounts.get(pastCounts.size() - 2);
+        differenceSincePreviousDay = differenceSincePreviousDay < 0 ? 0 : differenceSincePreviousDay;
+    }
+
     public int getId() {
-        return this.id;
+        return id;
     }
 
     @Override
@@ -56,7 +60,7 @@ public class RecoveredPatientsStats implements PatientsStats {
 
     @Override
     public List<Integer> getPastCounts() {
-        return this.pastCounts;
+        return pastCounts;
     }
 
     @Override
@@ -66,6 +70,7 @@ public class RecoveredPatientsStats implements PatientsStats {
 
     @Override
     public int getDifferenceSincePreviousDay() {
+        calculateAndUpdateDifferenceSincePreviousDay();
         return differenceSincePreviousDay;
     }
 
@@ -91,7 +96,24 @@ public class RecoveredPatientsStats implements PatientsStats {
 
     @Override
     public String toString() {
-        return "RecoveredPatientsStats [id=" + id + ", latestCount=" + latestCount + ", pastCounts=" + pastCounts + ", differenceSincePreviousDay=" + differenceSincePreviousDay + "]";
+        final StringBuilder builder = new StringBuilder();
+        builder.append("RecoveredPatientsStats [latestCount=");
+        builder.append(latestCount);
+        builder.append(", pastCounts=");
+        builder.append(pastCounts);
+        builder.append(", updatedOn=");
+        builder.append(updatedOn);
+        builder.append(", differenceSincePreviousDay=");
+        builder.append(differenceSincePreviousDay);
+        builder.append("]");
+        return builder.toString();
+    }
+
+    @Override
+    public int compareTo(final RecoveredPatientsStats otherPatient) {
+        if (otherPatient == null)
+            return 1;
+        return Integer.compare(otherPatient.latestCount, latestCount);
     }
 
 }
