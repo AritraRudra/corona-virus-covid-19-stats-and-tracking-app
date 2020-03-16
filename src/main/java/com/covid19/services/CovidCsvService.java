@@ -8,6 +8,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
@@ -15,6 +16,8 @@ import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.covid19.models.DeadPatientsStats;
@@ -36,64 +39,123 @@ public class CovidCsvService {
 
     private static String CONFIRMED_RECOVERED_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv";
 
+    private static final String PROVINCE_STATE = "Province/State";
+
+    private static final String COUNTRY_REGION = "Country/Region";
+
+    // http://www.cronmaker.com/ and https://www.freeformatter.com/cron-expression-generator-quartz.html
+    // At second :00, at minute :30, at 02am and 14pm, of every day (different from linux cron)
+    // https://stackoverflow.com/a/57426242/1679643
+    // https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/scheduling/support/CronSequenceGenerator.html
+    private static final String CRON_SCHEDULE = "0 30 2,14 * * *";
+
     @Autowired
     private LocationStatsRepository locationRepo;
 
-    // @PostConstruct
-    // Timer after one minute of startup and update DB. Fetch data from DB first if available.
-    // Invocations before will also fetch and update DB.
     // Schedule twice a day to update latest stats in DB.
-    public void fetchAndSaveStats() {
-        LocationStats locationStats = null;
-        try {
-            locationStats = fetchAndPrepareAllData();
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("Exception occurred : ", e);
+    // https://dzone.com/articles/running-on-time-with-springs-scheduled-tasks
+    // https://stackoverflow.com/questions/30887822/spring-cron-vs-normal-cron
+    // @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week]")
+    // @Scheduled(fixedDelay = 120000)
+    @Scheduled(cron = CRON_SCHEDULE)
+    public void scheduledDBUpdate() throws IOException, InterruptedException {
+        LOGGER.info("Starting cron scheduled DB update at {}", LocalDateTime.now());
+        fetchPrepareAndUpdateWholeDb();
+        LOGGER.info("Scheduled DB updated at {}", LocalDateTime.now());
+    }
+
+    private void fetchPrepareAndUpdateWholeDb() {
+        final List<LocationStats> fetchedDataForInfected = fetchFromUriByPatientType(CONFIRMED_INFECTED_URI,
+                PatientType.INFECTED);
+        final List<LocationStats> fetchedDataForDead = fetchFromUriByPatientType(CONFIRMED_DEATHS_URI,
+                PatientType.DEAD);
+        final List<LocationStats> fetchedDataForRecovered = fetchFromUriByPatientType(CONFIRMED_RECOVERED_URI,
+                PatientType.RECOVERED);
+        final int maxSize = getMax(fetchedDataForInfected.size(), fetchedDataForDead.size(),
+                fetchedDataForRecovered.size());
+        for (int i = 0; i < maxSize; i++) {
+            final String state = fetchedDataForInfected.get(i).getState();
+            final String region = fetchedDataForInfected.get(i).getRegion();
+            final LocationStats prepareStats = getPreviousData(state, region);
+            prepareStats.setInfectedPatientsStats(fetchedDataForInfected.get(i).getInfectedPatientsStats());
+
+            fetchedDataForDead.stream()
+            .filter(deathStats -> state.equals(deathStats.getState()) && region.equals(deathStats.getRegion()))
+            .findFirst()
+            .ifPresent(matchedStats -> prepareStats.setDeadPatientsStats(matchedStats.getDeadPatientsStats()));
+
+            fetchedDataForRecovered.stream()
+            .filter(recoveredStats -> state.equals(recoveredStats.getState())
+                    && region.equals(recoveredStats.getRegion())).findFirst()
+            .ifPresent(matchedStats -> prepareStats.setRecoveredPatientsStats(matchedStats.getRecoveredPatientsStats()));
+
+            prepareStats.setUpdatedOn(LocalDateTime.now());
+            LOGGER.debug("Saving data as: {}", prepareStats);
+            locationRepo.save(prepareStats);
         }
-        locationRepo.save(locationStats);
     }
 
-    private LocationStats fetchAndPrepareAllData() throws IOException, InterruptedException {
-        final StringBuilder sb = new StringBuilder();
-        final LocationStats locationStats = new LocationStats();
-        final HttpClient httpClient = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_INFECTED_URI)).build();
-        final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        sb.append(response.body());
-        request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_DEATHS_URI)).build();
-        sb.append(response.body());
-        request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_RECOVERED_URI)).build();
-        sb.append(response.body());
+    private LocationStats getPreviousData(final String state, final String region) {
+        final LocationStats prepareStats;
+        final List<LocationStats> dataFromDb = locationRepo.findByStateAndRegion(state, region);
+        if (dataFromDb == null || dataFromDb.isEmpty())
+            prepareStats = new LocationStats();
+        else
+            prepareStats = dataFromDb.get(0);
 
-        return locationStats;
+        prepareStats.setState(state);
+        prepareStats.setRegion(region);
+        return prepareStats;
     }
 
-    public List<LocationStats> fetchConfirmedInfected() throws IOException, InterruptedException {
+    @Async("tpDbTaskExecutor")
+    public void triggerAsyncDbUpdate() {
+        LOGGER.info("Starting async DB update at {}", LocalDateTime.now());
+        fetchPrepareAndUpdateWholeDb();
+        LOGGER.info("Async thread updated DB at {}", LocalDateTime.now());
+    }
+
+    private int getMax(final int i, final int j, final int k) {
+        return i > j ? (i > k ? i : k) : (j > k ? j : k);
+    }
+
+    public List<LocationStats> fetchConfirmedInfected() {
         // Check in DB if data exists and last updated in less one day. If not then fetch, update and send.
         if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.INFECTED))
             return getDataFromDb();
-        final HttpClient httpClient = HttpClient.newHttpClient();
-        final HttpRequest request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_INFECTED_URI)).build();
-        final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return parseCSVResponse(new StringReader(response.body()), PatientType.INFECTED);
+        else
+            triggerAsyncDbUpdate();
+        return fetchFromUriByPatientType(CONFIRMED_INFECTED_URI, PatientType.INFECTED);
     }
 
-    public List<LocationStats> fetchConfirmedDeads() throws IOException, InterruptedException {
+    public List<LocationStats> fetchConfirmedDeads() {
         if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.DEAD))
             return getDataFromDb();
-        final HttpClient httpClient = HttpClient.newHttpClient();
-        final HttpRequest request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_DEATHS_URI)).build();
-        final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return parseCSVResponse(new StringReader(response.body()), PatientType.DEAD);
+        else
+            triggerAsyncDbUpdate();
+        return fetchFromUriByPatientType(CONFIRMED_DEATHS_URI, PatientType.DEAD);
     }
 
-    public List<LocationStats> fetchConfirmedRecovered() throws IOException, InterruptedException {
+    public List<LocationStats> fetchConfirmedRecovered() {
         if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.RECOVERED))
             return getDataFromDb();
+        else
+            triggerAsyncDbUpdate();
+        return fetchFromUriByPatientType(CONFIRMED_RECOVERED_URI, PatientType.RECOVERED);
+    }
+
+    private List<LocationStats> fetchFromUriByPatientType(final String uri, final PatientType patientType) {
         final HttpClient httpClient = HttpClient.newHttpClient();
-        final HttpRequest request = HttpRequest.newBuilder().uri(URI.create(CONFIRMED_RECOVERED_URI)).build();
-        final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return parseCSVResponse(new StringReader(response.body()), PatientType.RECOVERED);
+        final HttpRequest request = HttpRequest.newBuilder().uri(URI.create(uri)).build();
+        HttpResponse<String> response;
+        // TODO : Maybe use retry on few types of exceptions
+        try {
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return parseCSVResponse(new StringReader(response.body()), patientType);
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("Exception occurred : ", e);
+            return Collections.emptyList();
+        }
     }
 
     private List<LocationStats> parseCSVResponse(final StringReader stringReader, final PatientType patientType)
@@ -102,15 +164,14 @@ public class CovidCsvService {
         final List<LocationStats> statsList = new ArrayList<>();
         for (final CSVRecord record : records) {
             final LocationStats latestStats = prepareStats(record, patientType);
-            locationRepo.save(latestStats);
             statsList.add(latestStats);
         }
         return statsList;
     }
 
     private LocationStats prepareStats(final CSVRecord record, final PatientType patientType) {
-        final String state = record.get("Province/State");
-        final String region = record.get("Country/Region");
+        final String state = record.get(PROVINCE_STATE);
+        final String region = record.get(COUNTRY_REGION);
         LocationStats locationStats = null;
         final List<LocationStats> tempList = locationRepo.findByStateAndRegion(state, region);
         if (tempList == null || tempList.isEmpty())
@@ -130,20 +191,14 @@ public class CovidCsvService {
         switch (patientType) {
             case DEAD :
                 patientsStats = prepareAndUpdatePatientsStats(record, new DeadPatientsStats());
-                // locationStats.setInfectedPatientsStats(null);
                 locationStats.setDeadPatientsStats((DeadPatientsStats) patientsStats);
-                // locationStats.setRecoveredPatientsStats(null);
                 break;
             case INFECTED :
                 patientsStats = prepareAndUpdatePatientsStats(record, new InfectedPatientsStats());
                 locationStats.setInfectedPatientsStats((InfectedPatientsStats) patientsStats);
-                // locationStats.setDeadPatientsStats(null);
-                // locationStats.setRecoveredPatientsStats(null);
                 break;
             case RECOVERED :
                 patientsStats = prepareAndUpdatePatientsStats(record, new RecoveredPatientsStats());
-                // locationStats.setInfectedPatientsStats(null);
-                // locationStats.setDeadPatientsStats(null);
                 locationStats.setRecoveredPatientsStats((RecoveredPatientsStats) patientsStats);
                 break;
             default :
@@ -168,6 +223,7 @@ public class CovidCsvService {
         for (int i = indexOfStartingColumn; i <= indexOfLastColumn; i++)
             listOfDailyCount.add(Integer.parseInt(record.get(i)));
         patientsStats.setPastCounts(listOfDailyCount);
+        patientsStats.setUpdatedOn(LocalDateTime.now());
         return patientsStats;
     }
 
@@ -201,7 +257,7 @@ public class CovidCsvService {
         if (latestUpdatedOn == null)
             return false;
         final LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
-        System.out.println("latestUpdatedOn: " + latestUpdatedOn + "yesterday: " + yesterday);
+        LOGGER.debug("latestUpdatedOn: {}, yesterday: {}", latestUpdatedOn, yesterday);
         return !latestUpdatedOn.isBefore(yesterday);
     }
 
@@ -224,7 +280,7 @@ public class CovidCsvService {
         if (latestUpdatedOn == null)
             return false;
         final LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
-        System.out.println("latestUpdatedOn: " + latestUpdatedOn + "yesterday: " + yesterday);
+        LOGGER.debug("latestUpdatedOn: {}, yesterday: {}", latestUpdatedOn, yesterday);
         return !latestUpdatedOn.isBefore(yesterday);
     }
 

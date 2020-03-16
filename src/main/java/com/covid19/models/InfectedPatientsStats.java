@@ -9,9 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.PostLoad;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import com.covid19.repositories.converters.StringListConverter;
 
@@ -33,14 +31,8 @@ public class InfectedPatientsStats implements PatientsStats, Comparable<Infected
     @Column(name = "UpdatedOn")
     private LocalDateTime updatedOn;
 
-    @Transient
+    @Column(name = "Diff")
     private int differenceSincePreviousDay;
-
-    @PostLoad
-    private void calculateAndUpdateDifferenceSincePreviousDay() {
-        differenceSincePreviousDay = latestCount - pastCounts.get(pastCounts.size() - 2);
-        differenceSincePreviousDay = differenceSincePreviousDay < 0 ? 0 : differenceSincePreviousDay;
-    }
 
     public int getId() {
         return id;
@@ -68,7 +60,6 @@ public class InfectedPatientsStats implements PatientsStats, Comparable<Infected
 
     @Override
     public int getDifferenceSincePreviousDay() {
-        calculateAndUpdateDifferenceSincePreviousDay();
         return differenceSincePreviousDay;
     }
 
