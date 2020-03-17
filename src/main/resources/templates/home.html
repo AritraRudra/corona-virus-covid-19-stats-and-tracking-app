@@ -16,7 +16,7 @@ body{
 }
 .bg {
   background-image: url("../static/images/body-background.jpg");
-
+  
   /* Full height */
   height: 100%; 
 
@@ -29,7 +29,7 @@ body{
 </style>
 </head>
 
-<body class="bg" th:src="@{images/hospital_1.jpg}">
+<body class="bg" th:src="@{images/body-background.jpg}">
 <div class="main-page bg d-flex flex-column flex-fill">
     
 <!-- <div class="bg"> -->
@@ -82,7 +82,7 @@ body{
 			<img class="card-img-top" src="../static/images/coronavirus-graphic_2.jpg" th:src="@{images/coronavirus-graphic_2.jpg}" alt="Card image cap">
 			<div class="card-body">
 			  <h4 class="card-title" th:text="${INFECTED_current_count}">0</h4>
-			  <p class="card-text"><h6 th:text="${INFECTED_new_count}"> newly infected since yesterday.</h6></p>
+			  <p class="card-text" th:text="${INFECTED_new_count} + ' newly infected since yesterday.'"></p>
 			  <a href="infected" class="btn btn-primary stretched-link">Click for more details</a>
 			  <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
 			</div>
@@ -91,7 +91,7 @@ body{
 			<img class="card-img-top" src="../static/images/candle-light-vigil-getty-517.jpg" th:src="@{images/candle-light-vigil-getty-517.jpg}" alt="Card image cap">
 			<div class="card-body">
 			  <h4 class="card-title" th:text="${DEAD_current_count}">0</h4>
-			  <p class="card-text" th:text="${DEAD_new_count}"><h6> died since yesterday.</h6></p>
+			  <p class="card-text" th:text="${DEAD_new_count} +' died since yesterday.'"></p>
 			  <a href="dead" class="btn btn-primary stretched-link">Click for more details</a>
 			   <div class="card-footer" style="background-color:#ffffff; border-color: #337ab7;">
       <small class="text-muted">Last updated 3 mins ago</small>
@@ -102,7 +102,7 @@ body{
 			<img class="card-img-top" src="../static/images/coronavirus-graphic_1.jpg" th:src="@{images/coronavirus-graphic_1.jpg}" alt="Card image cap">
 			<div class="card-body">
 			  <h4 class="card-title" th:text="${RECOVERED_current_count}">0</h4>
-			  <p class="card-text" th:text="${RECOVERED_new_count}"> recovered since yesterday.</p>
+			  <p class="card-text" th:text="${RECOVERED_new_count}+ ' recovered since yesterday.'"></p>
 			  <a href="recovered" class="btn btn-primary stretched-link">Click for more details</a>
 			   <div class="card-footer">
       <small class="text-muted">Last updated 3 mins ago</small>
