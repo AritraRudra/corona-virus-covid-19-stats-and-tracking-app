@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.covid19.models.LocationStats;
 import com.covid19.models.PatientType;
-import com.covid19.services.CovidCsvService;
+import com.covid19.services.CovidDataService;
 
 @Controller
 public class Covid19Controller {
@@ -20,7 +20,7 @@ public class Covid19Controller {
     private static final String UNDERSCORE = "_";
 
     @Autowired
-    private CovidCsvService csvService;
+    private CovidDataService csvService;
 
     @GetMapping("/")
     public String homePageInfo(final Model uiModel) throws IOException, InterruptedException {

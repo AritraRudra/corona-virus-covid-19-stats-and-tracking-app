@@ -22,19 +22,19 @@ import com.covid19.models.LocationStats;
 
 public interface LocationStatsRepository extends JpaRepository<LocationStats, Integer> {
 
-    @Query(value = "SELECT updated_on FROM LOCATION_STATS WHERE updated_on = (SELECT MAX(updated_on) from LOCATION_STATS)", nativeQuery = true)
+    @Query(value = "SELECT MAX(updated_on) from LOCATION_STATS", nativeQuery = true)
     @Transactional(readOnly = true)
     LocalDateTime findLatestUpdatedTime();
 
-    @Query(value = "SELECT updated_on FROM INFECTED_PATIENTS_STATS WHERE updated_on = (SELECT MAX(updated_on) from INFECTED_PATIENTS_STATS)", nativeQuery = true)
+    @Query(value = "SELECT MAX(updated_on) from INFECTED_PATIENTS_STATS", nativeQuery = true)
     @Transactional(readOnly = true)
     LocalDateTime findLatestUpdatedTimeOfInfectedPatients();
 
-    @Query(value = "SELECT updated_on FROM DEAD_PATIENTS_STATS WHERE updated_on = (SELECT MAX(updated_on) from DEAD_PATIENTS_STATS)", nativeQuery = true)
+    @Query(value = "SELECT MAX(updated_on) from DEAD_PATIENTS_STATS", nativeQuery = true)
     @Transactional(readOnly = true)
     LocalDateTime findLatestUpdatedTimeOfDeadPatients();
 
-    @Query(value = "SELECT updated_on FROM RECOVERED_PATIENTS_STATS WHERE updated_on = (SELECT MAX(updated_on) from RECOVERED_PATIENTS_STATS)", nativeQuery = true)
+    @Query(value = "SELECT MAX(updated_on) from RECOVERED_PATIENTS_STATS", nativeQuery = true)
     @Transactional(readOnly = true)
     LocalDateTime findLatestUpdatedTimeOfRecoveredPatients();
 

@@ -15,7 +15,7 @@ body{
   margin: 0;
 }
 .bg {
-  background-image: url("../static/images/body-background.jpg");
+  background-image: url("../images/body-background.jpg");
   
   /* Full height */
   height: 100%; 
@@ -29,7 +29,7 @@ body{
 </style>
 </head>
 
-<body class="bg" th:src="@{images/body-background.jpg}">
+<body class="bg">
 <div class="main-page bg d-flex flex-column flex-fill">
     
 <!-- <div class="bg"> -->
@@ -111,7 +111,7 @@ body{
 		  </div>
 	</div>
     
-    <div class="jumbotron">
+    <div class="jumbotron bg-transparent">
         <a href="../home.html" th:href="@{/}">Return to home</a>
     </div>
 </div>
