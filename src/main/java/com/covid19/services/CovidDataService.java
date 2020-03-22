@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.covid19.constants.CovidConstants;
 import com.covid19.models.LocationStats;
 import com.covid19.models.PatientType;
 import com.covid19.repositories.LocationStatsRepository;
@@ -19,12 +20,6 @@ import com.covid19.services.helpers.CovidDataServiceHelper;
 public class CovidDataService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CovidDataService.class);
-
-    private static String CONFIRMED_INFECTED_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv";
-
-    private static String CONFIRMED_DEATHS_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv";
-
-    private static String CONFIRMED_RECOVERED_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv";
 
     // http://www.cronmaker.com/ and https://www.freeformatter.com/cron-expression-generator-quartz.html
     // At second :00, at minute :30, at 02am and 14pm, of every day (different from linux cron)
@@ -56,7 +51,7 @@ public class CovidDataService {
             return getDataFromDb();
         else
             covidHelper.triggerAsyncDbUpdate();
-        return covidHelper.fetchFromUriByPatientType(CONFIRMED_INFECTED_URI, PatientType.INFECTED);
+        return covidHelper.fetchFromUriByPatientType(CovidConstants.CONFIRMED_INFECTED_URI, PatientType.INFECTED);
     }
 
     public List<LocationStats> fetchConfirmedDeads() {
@@ -64,7 +59,7 @@ public class CovidDataService {
             return getDataFromDb();
         else
             covidHelper.triggerAsyncDbUpdate();
-        return covidHelper.fetchFromUriByPatientType(CONFIRMED_DEATHS_URI, PatientType.DEAD);
+        return covidHelper.fetchFromUriByPatientType(CovidConstants.CONFIRMED_DEATHS_URI, PatientType.DEAD);
     }
 
     public List<LocationStats> fetchConfirmedRecovered() {
@@ -72,7 +67,7 @@ public class CovidDataService {
             return getDataFromDb();
         else
             covidHelper.triggerAsyncDbUpdate();
-        return covidHelper.fetchFromUriByPatientType(CONFIRMED_RECOVERED_URI, PatientType.RECOVERED);
+        return covidHelper.fetchFromUriByPatientType(CovidConstants.CONFIRMED_RECOVERED_URI, PatientType.RECOVERED);
     }
 
     private List<LocationStats> getDataFromDb() {

@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import com.covid19.constants.CovidConstants;
 import com.covid19.models.DeadPatientsStats;
 import com.covid19.models.InfectedPatientsStats;
 import com.covid19.models.LocationStats;
@@ -31,16 +32,6 @@ import com.covid19.repositories.LocationStatsRepository;
 public class CovidDataServiceHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CovidDataServiceHelper.class);
 
-    private static String CONFIRMED_INFECTED_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv";
-
-    private static String CONFIRMED_DEATHS_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv";
-
-    private static String CONFIRMED_RECOVERED_URI = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv";
-
-    private static final String PROVINCE_STATE = "Province/State";
-
-    private static final String COUNTRY_REGION = "Country/Region";
-
     @Autowired
     private LocationStatsRepository locationRepo;
 
@@ -52,11 +43,13 @@ public class CovidDataServiceHelper {
     }
 
     public void fetchPrepareAndUpdateWholeDb() {
-        final List<LocationStats> fetchedDataForInfected = fetchFromUriByPatientType(CONFIRMED_INFECTED_URI,
+        final List<LocationStats> fetchedDataForInfected = fetchFromUriByPatientType(
+                CovidConstants.CONFIRMED_INFECTED_URI,
                 PatientType.INFECTED);
-        final List<LocationStats> fetchedDataForDead = fetchFromUriByPatientType(CONFIRMED_DEATHS_URI,
+        final List<LocationStats> fetchedDataForDead = fetchFromUriByPatientType(CovidConstants.CONFIRMED_DEATHS_URI,
                 PatientType.DEAD);
-        final List<LocationStats> fetchedDataForRecovered = fetchFromUriByPatientType(CONFIRMED_RECOVERED_URI,
+        final List<LocationStats> fetchedDataForRecovered = fetchFromUriByPatientType(
+                CovidConstants.CONFIRMED_RECOVERED_URI,
                 PatientType.RECOVERED);
         final int maxSize = getMax(fetchedDataForInfected.size(), fetchedDataForDead.size(),
                 fetchedDataForRecovered.size());
@@ -126,8 +119,8 @@ public class CovidDataServiceHelper {
     }
 
     private LocationStats prepareStats(final CSVRecord record, final PatientType patientType) {
-        final String state = record.get(PROVINCE_STATE);
-        final String region = record.get(COUNTRY_REGION);
+        final String state = record.get(CovidConstants.PROVINCE_STATE);
+        final String region = record.get(CovidConstants.COUNTRY_REGION);
         LocationStats locationStats = null;
         final List<LocationStats> tempList = locationRepo.findByStateAndRegion(state, region);
         if (tempList == null || tempList.isEmpty())

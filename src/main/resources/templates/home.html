@@ -105,13 +105,13 @@ body{
 			  <p class="card-text" th:text="${RECOVERED_new_count}+ ' recovered since yesterday.'"></p>
 			  <a href="recovered" class="btn btn-primary stretched-link">Click for more details</a>
 			   <div class="card-footer">
-      <small class="text-muted">Last updated 3 mins ago</small>
+      <small class="text-muted">Last updated <span> </span> ago.</small>
     </div>
 			</div>
 		  </div>
 	</div>
     
-    <div class="jumbotron bg-transparent">
+    <div class="jumbotron bg-transparent" style="text-align:center;margin: auto;">
         <a href="../home.html" th:href="@{/}">Return to home</a>
     </div>
 </div>
