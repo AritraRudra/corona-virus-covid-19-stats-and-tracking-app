@@ -1,0 +1,1 @@
+[![Build Status](https://travis-ci.com/AritraRudra/corona-virus-covid-19-stats-and-tracking-app.svg?branch=master)](https://travis-ci.com/AritraRudra/corona-virus-covid-19-stats-and-tracking-app)
