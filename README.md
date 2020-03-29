@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.com/AritraRudra/corona-virus-covid-19-stats-and-tracking-app.svg?branch=master)](https://travis-ci.com/AritraRudra/corona-virus-covid-19-stats-and-tracking-app)
+![Github CI for Maven](https://github.com/AritraRudra/corona-virus-covid-19-stats-and-tracking-app/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master)
+![Github Docker Image CI](https://github.com/AritraRudra/corona-virus-covid-19-stats-and-tracking-app/workflows/Docker%20Image%20CI/badge.svg?branch=master)
 ![Language count](https://img.shields.io/github/languages/count/AritraRudra/corona-virus-covid-19-stats-and-tracking-app)
 ![Code size in bytes](https://img.shields.io/github/languages/code-size/AritraRudra/corona-virus-covid-19-stats-and-tracking-app)
 ![Repo size](https://img.shields.io/github/repo-size/AritraRudra/corona-virus-covid-19-stats-and-tracking-app)
