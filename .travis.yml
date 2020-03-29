@@ -1,0 +1,10 @@
+language: java
+sudo: false # faster builds
+
+script: "mvn clean install -B"
+
+jobs:
+  include:
+  - os: linux
+    dist: trusty
+    jdk: openjdk13
