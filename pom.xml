@@ -16,10 +16,11 @@
    <description>Corona Virus Infected Statistics</description>
 
    <properties>
-      <jar.finalName>covid-19-app</jar.finalName>
+      <jar.finalName>covid-19-app-${project.version}</jar.finalName>
       <java.version>13</java.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	  <jacoco.version>0.8.5</jacoco.version>
    </properties>
 
    <dependencies>
@@ -84,6 +85,67 @@
          <plugin>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
+         </plugin>
+		 
+		 <!-- Jacoco -->
+         <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco.version}</version>
+            <executions>
+               <execution>
+                  <id>prepare-agent</id>
+                  <goals>
+                     <goal>prepare-agent</goal>
+                  </goals>
+               </execution>
+               <execution>
+                  <id>report</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>report</goal>
+                  </goals>
+               </execution>
+               <!-- Added for coverage checking -->
+               <execution>
+                  <id>jacoco-check</id>
+                  <goals>
+                     <goal>check</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <rule>
+                           <element>PACKAGE</element>
+                           <limits>
+                              <limit>
+                                 <counter>LINE</counter>
+                                 <value>COVEREDRATIO</value>
+                                 <minimum>0.0</minimum>
+                              </limit>
+                           </limits>
+                        </rule>
+                     </rules>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>post-unit-test</id>
+                  <phase>test</phase>
+                  <goals>
+                     <goal>report</goal>
+                  </goals>
+                  <configuration>
+                     <!-- Sets the path to the file which contains the execution data. -->
+                     <dataFile>target/jacoco.exec</dataFile>
+                     <!-- Sets the output directory for the code coverage report. -->
+                     <outputDirectory>target/jacoco-ut</outputDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+            <configuration>
+               <systemPropertyVariables>
+                  <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+               </systemPropertyVariables>
+            </configuration>
          </plugin>
       </plugins>
    </build>
