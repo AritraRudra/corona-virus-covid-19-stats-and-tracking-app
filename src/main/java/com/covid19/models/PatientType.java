@@ -1,11 +1,15 @@
 package com.covid19.models;
 
 public enum PatientType {
-	INFECTED("infected"), DEAD("dead"), RECOVERED("recovered");
+    INFECTED("infected"), DEAD("dead"), RECOVERED("recovered");
 
-	final String name;
+    private final String value;
 
-	PatientType(final String type) {
-		name = type;
-	}
+    PatientType(final String type) {
+        value = type;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

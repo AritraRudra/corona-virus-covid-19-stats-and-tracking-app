@@ -6,8 +6,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class Covid19InfectedTrackingAppApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
+
+    @Test
+    public void main() {
+        Covid19InfectedTrackingAppApplication.main(new String[]{});
+    }
 
 }

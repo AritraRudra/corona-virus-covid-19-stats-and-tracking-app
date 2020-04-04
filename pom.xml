@@ -20,7 +20,7 @@
       <java.version>13</java.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-	  <jacoco.version>0.8.5</jacoco.version>
+      <jacoco.version>0.8.5</jacoco.version>
    </properties>
 
    <dependencies>
@@ -80,14 +80,39 @@
    </dependencies>
 
    <build>
-   <finalName>${jar.finalName}</finalName>
+      <finalName>${jar.finalName}</finalName>
       <plugins>
          <plugin>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
          </plugin>
-		 
-		 <!-- Jacoco -->
+
+         <!-- tag::unpack[] -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>unpack</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>unpack</goal>
+                  </goals>
+                  <configuration>
+                     <artifactItems>
+                        <artifactItem>
+                           <groupId>${project.groupId}</groupId>
+                           <artifactId>${project.artifactId}</artifactId>
+                           <version>${project.version}</version>
+                        </artifactItem>
+                     </artifactItems>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <!-- end::unpack[] -->
+
+         <!-- Jacoco -->
          <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
@@ -147,6 +172,8 @@
                </systemPropertyVariables>
             </configuration>
          </plugin>
+         <!-- end:: Jacoco -->
+
       </plugins>
    </build>
 

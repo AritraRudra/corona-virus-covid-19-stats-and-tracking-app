@@ -14,7 +14,7 @@ import com.covid19.constants.CovidConstants;
 import com.covid19.models.LocationStats;
 import com.covid19.models.PatientType;
 import com.covid19.repositories.LocationStatsRepository;
-import com.covid19.services.helpers.CovidDataServiceHelper;
+import com.covid19.services.helpers.CovidDataServiceHandler;
 
 @Service
 public class CovidDataService {
@@ -31,7 +31,7 @@ public class CovidDataService {
     private LocationStatsRepository locationRepo;
 
     @Autowired
-    private CovidDataServiceHelper covidHelper;
+    private CovidDataServiceHandler covidHandler;
 
     // Schedule twice a day to update latest stats in DB.
     // https://dzone.com/articles/running-on-time-with-springs-scheduled-tasks
@@ -41,33 +41,36 @@ public class CovidDataService {
     @Scheduled(cron = CRON_SCHEDULE)
     public void scheduledDBUpdate() throws IOException, InterruptedException {
         LOGGER.info("Starting cron scheduled DB update at {}", LocalDateTime.now());
-        covidHelper.fetchPrepareAndUpdateWholeDb();
+        covidHandler.fetchPrepareAndUpdateWholeDb();
         LOGGER.info("Scheduled DB updated at {}", LocalDateTime.now());
     }
 
     public List<LocationStats> fetchConfirmedInfected() {
-        // Check in DB if data exists and last updated in less one day. If not then fetch, update and send.
+        // Check in DB if data exists and last updated in less than update duration. If not then fetch and send.
         if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.INFECTED))
             return getDataFromDb();
         else
-            covidHelper.triggerAsyncDbUpdate();
-        return covidHelper.fetchFromUriByPatientType(CovidConstants.CONFIRMED_INFECTED_URI, PatientType.INFECTED);
+            // TODO : for test and fast data update, remove this else case in prod
+            covidHandler.triggerAsyncDbUpdate();
+        return covidHandler.fetchFromUriByPatientType(CovidConstants.CONFIRMED_INFECTED_URI, PatientType.INFECTED);
     }
 
     public List<LocationStats> fetchConfirmedDeads() {
         if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.DEAD))
             return getDataFromDb();
         else
-            covidHelper.triggerAsyncDbUpdate();
-        return covidHelper.fetchFromUriByPatientType(CovidConstants.CONFIRMED_DEATHS_URI, PatientType.DEAD);
+            // TODO : for test and fast data update, remove this else case in prod
+            covidHandler.triggerAsyncDbUpdate();
+        return covidHandler.fetchFromUriByPatientType(CovidConstants.CONFIRMED_DEATHS_URI, PatientType.DEAD);
     }
 
     public List<LocationStats> fetchConfirmedRecovered() {
         if (isLatestDataAvailable() && isLatestDataAvailableByPatientType(PatientType.RECOVERED))
             return getDataFromDb();
         else
-            covidHelper.triggerAsyncDbUpdate();
-        return covidHelper.fetchFromUriByPatientType(CovidConstants.CONFIRMED_RECOVERED_URI, PatientType.RECOVERED);
+            // TODO : for test and fast data update, remove this else case in prod
+            covidHandler.triggerAsyncDbUpdate();
+        return covidHandler.fetchFromUriByPatientType(CovidConstants.CONFIRMED_RECOVERED_URI, PatientType.RECOVERED);
     }
 
     private List<LocationStats> getDataFromDb() {
@@ -78,9 +81,9 @@ public class CovidDataService {
         final LocalDateTime latestUpdatedOn = locationRepo.findLatestUpdatedTime();
         if (latestUpdatedOn == null)
             return false;
-        final LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
-        LOGGER.debug("latestUpdatedOn: {}, yesterday: {}", latestUpdatedOn, yesterday);
-        return !latestUpdatedOn.isBefore(yesterday);
+        final LocalDateTime previousUpdatedTimeStamp = LocalDateTime.now().minusHours(12);
+        LOGGER.debug("latestUpdatedOn: {}", latestUpdatedOn);
+        return !latestUpdatedOn.isBefore(previousUpdatedTimeStamp);
     }
 
     private boolean isLatestDataAvailableByPatientType(final PatientType patientType) {
@@ -101,9 +104,9 @@ public class CovidDataService {
 
         if (latestUpdatedOn == null)
             return false;
-        final LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
-        LOGGER.debug("latestUpdatedOn: {}, yesterday: {}", latestUpdatedOn, yesterday);
-        return !latestUpdatedOn.isBefore(yesterday);
+        final LocalDateTime previousUpdatedTimeStamp = LocalDateTime.now().minusHours(12);
+        LOGGER.debug("latestUpdatedOn: {}", latestUpdatedOn);
+        return !latestUpdatedOn.isBefore(previousUpdatedTimeStamp);
     }
 
     public int getCurrentCountByPatientType(final List<LocationStats> stats, final PatientType patientType) {

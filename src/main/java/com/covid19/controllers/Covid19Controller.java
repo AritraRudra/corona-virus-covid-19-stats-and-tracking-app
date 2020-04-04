@@ -26,7 +26,7 @@ public class Covid19Controller {
     public String homePageInfo(final Model uiModel) throws IOException, InterruptedException {
         // TODO : Maybe use retry on few types of exceptions
         List<LocationStats> stats = csvService.fetchConfirmedInfected()
-                                    .parallelStream().sorted().collect(Collectors.toList());
+                .parallelStream().sorted().collect(Collectors.toList());
         fetchAndUpdateDataForUIModel(uiModel, stats, PatientType.INFECTED);
         stats = csvService.fetchConfirmedDeads();
         fetchAndUpdateDataForUIModel(uiModel, stats, PatientType.DEAD);
@@ -44,7 +44,12 @@ public class Covid19Controller {
                 .sorted(
                         Comparator.comparing(LocationStats::getInfectedPatientsStats))
                 .collect(Collectors.toList()), PatientType.INFECTED);
-        return PatientType.INFECTED.name();
+        // return PatientType.INFECTED.name();
+        System.out.println(PatientType.INFECTED);
+        System.out.println(PatientType.INFECTED.name());
+        System.out.println(PatientType.INFECTED.getValue());
+        System.out.println(PatientType.INFECTED.toString());
+        return PatientType.INFECTED.getValue();
     }
 
     @GetMapping("/dead")
@@ -55,7 +60,7 @@ public class Covid19Controller {
         fetchAndUpdateDataForUIModel(uiModel, stats.parallelStream()
                 .sorted(Comparator.comparing(LocationStats::getDeadPatientsStats)).collect(Collectors.toList()),
                 PatientType.DEAD);
-        return PatientType.DEAD.name();
+        return PatientType.DEAD.getValue();
     }
 
     @GetMapping("/recovered")
@@ -65,7 +70,7 @@ public class Covid19Controller {
         fetchAndUpdateDataForUIModel(uiModel, stats.parallelStream()
                 .sorted(Comparator.comparing(LocationStats::getRecoveredPatientsStats)).collect(Collectors.toList()),
                 PatientType.RECOVERED);
-        return PatientType.RECOVERED.name();
+        return PatientType.RECOVERED.getValue();
     }
 
     private void fetchAndUpdateDataForUIModel(final Model uiModel, final List<LocationStats> stats,

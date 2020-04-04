@@ -1,6 +1,8 @@
 package com.covid19.models;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -105,6 +107,14 @@ public class RecoveredPatientsStats implements PatientsStats, Comparable<Recover
         if (otherPatient == null)
             return 1;
         return Integer.compare(otherPatient.latestCount, latestCount);
+    }
+
+    public RecoveredPatientsStats initialiseToMatchForEmptyDbRow(final int lengthOfPreviousCounts) {
+        latestCount = 0;
+        pastCounts = new ArrayList<>(Collections.nCopies(lengthOfPreviousCounts, 0));
+        updatedOn = LocalDateTime.now();
+        differenceSincePreviousDay = 0;
+        return this;
     }
 
 }

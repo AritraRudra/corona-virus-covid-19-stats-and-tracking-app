@@ -23,7 +23,7 @@ public class Covid19InfectedTrackingAppApplication {
     @Bean("tpDbTaskExecutor")
     public TaskExecutor getAsyncExecutor() {
         final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
+        executor.setCorePoolSize(3);
         executor.setMaxPoolSize(5);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setThreadNamePrefix("Async-");
