@@ -41,5 +41,5 @@ COPY --from=maven-package ${DEPENDENCY}/BOOT-INF/classes /app
 
 EXPOSE 8080
 
-CMD ["java","-cp","app/bin/*:app/lib/*","com.covid19.Covid19InfectedTrackingAppApplication"]
-# ENTRYPOINT ["java","-cp","app/bin/*:app/lib/*","com.covid19.Covid19InfectedTrackingAppApplication"]
+CMD ["java","-cp","app:app/bin/*:app/lib/*","com.covid19.Covid19InfectedTrackingAppApplication"]
+# ENTRYPOINT ["java","-cp","app:app/bin/*:app/lib/*","com.covid19.Covid19InfectedTrackingAppApplication"]
