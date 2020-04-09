@@ -34,6 +34,12 @@ public class LocationStats implements Comparable<LocationStats> {
     @Column(name = "region")
     private String region;
 
+    @Column(name = "lat")
+    private String latitude;
+
+    @Column(name = "long")
+    private String longitude;
+
     // TODO : Fetch types to be updated
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = InfectedPatientsStats.class)
     @JoinColumn(name = "fk_id_infected_patients_stats")
@@ -68,6 +74,22 @@ public class LocationStats implements Comparable<LocationStats> {
 
     public void setRegion(final String region) {
         this.region = region;
+    }
+
+    public String getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(final String latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(final String longitude) {
+        this.longitude = longitude;
     }
 
     public InfectedPatientsStats getInfectedPatientsStats() {

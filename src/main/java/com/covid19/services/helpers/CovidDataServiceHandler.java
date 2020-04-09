@@ -62,7 +62,7 @@ public class CovidDataServiceHandler {
         for (int i = 0; i < maxSize; i++) {
             final String state = fetchedDataForInfected.get(i).getState();
             final String region = fetchedDataForInfected.get(i).getRegion();
-            final LocationStats prepareStats = getPreviousData(state, region);
+            final LocationStats prepareStats = getPreviousData(fetchedDataForInfected.get(i));
             prepareStats.setInfectedPatientsStats(fetchedDataForInfected.get(i).getInfectedPatientsStats());
 
             Optional<LocationStats> findFirstPatientsStats = fetchedDataForDead.stream()
@@ -92,17 +92,21 @@ public class CovidDataServiceHandler {
         }
     }
 
-    private LocationStats getPreviousData(final String state, final String region) {
-        final LocationStats prepareStats;
-        final List<LocationStats> dataFromDb = locationRepo.findByStateAndRegion(state, region);
-        if (dataFromDb == null || dataFromDb.isEmpty())
-            prepareStats = new LocationStats();
+    private LocationStats getPreviousData(final LocationStats locationStats) {
+        final LocationStats preparedStats;
+        final List<LocationStats> dataFromDb = locationRepo.findByStateAndRegion(locationStats.getState(),
+                locationStats.getRegion());
+        if (dataFromDb == null || dataFromDb.isEmpty()) {
+            preparedStats = new LocationStats();
+            preparedStats.setState(locationStats.getState());
+            preparedStats.setRegion(locationStats.getRegion());
+        }
         else
-            prepareStats = dataFromDb.get(0);
-
-        prepareStats.setState(state);
-        prepareStats.setRegion(region);
-        return prepareStats;
+            preparedStats = dataFromDb.get(0);
+        // Always update so that any modifications to lat/long n original data is reflected
+        preparedStats.setLatitude(locationStats.getLatitude());
+        preparedStats.setLongitude(locationStats.getLongitude());
+        return preparedStats;
     }
 
     private int getMax(final int i, final int j, final int k) {
@@ -137,14 +141,25 @@ public class CovidDataServiceHandler {
     private LocationStats prepareStats(final CSVRecord record, final PatientType patientType) {
         final String state = record.get(CovidConstants.PROVINCE_STATE);
         final String region = record.get(CovidConstants.COUNTRY_REGION);
+        final String latitude = record.get(CovidConstants.LATITUDE);
+        final String longitude = record.get(CovidConstants.LONGITUDE);
         LocationStats locationStats = null;
         final List<LocationStats> tempList = locationRepo.findByStateAndRegion(state, region);
-        if (tempList == null || tempList.isEmpty())
+        if (tempList == null || tempList.isEmpty()) {
             locationStats = new LocationStats();
-        else
-            locationStats = (tempList.get(0) == null ? new LocationStats() : tempList.get(0));
-        locationStats.setState(state);
-        locationStats.setRegion(region);
+            locationStats.setState(state);
+            locationStats.setRegion(region);
+        } else {
+            locationStats = tempList.get(0);
+            if (locationStats == null) {
+                locationStats = new LocationStats();
+                locationStats.setState(state);
+                locationStats.setRegion(region);
+            }
+        }
+        // Always update so that any modifications to lat/long n original data is reflected
+        locationStats.setLatitude(latitude);
+        locationStats.setLongitude(longitude);
         updateLocationStatsByPatientsStats(record, locationStats, patientType);
         locationStats.setUpdatedOn(LocalDateTime.now());
         return locationStats;

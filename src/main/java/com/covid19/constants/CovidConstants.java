@@ -14,4 +14,8 @@ public class CovidConstants {
 
     public static final String COUNTRY_REGION = "Country/Region";
 
+    public static final String LATITUDE = "Lat";
+
+    public static final String LONGITUDE = "Long";
+
 }
