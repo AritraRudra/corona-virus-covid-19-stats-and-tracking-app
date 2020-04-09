@@ -15,20 +15,6 @@
     		$('#dataTable').DataTable();
     	});
     </script>
-
-    <!-- https://stackoverflow.com/questions/17012421/auto-number-table-rows -->
-    <!-- https://stackoverflow.com/questions/42796083/how-to-add-auto-number-table-row -->
-    <!-- https: //stackoverflow.com/questions/18998526/how-to-get-automatic-serial-number-column-in-the-html-table -->
-    <style>
-        table {
-        	counter-reset: rowNumber;  /* Set the row counter to 0 */
-        }
-        
-        table tr td:first-child::before {
-        	counter-increment: rowNumber;  /* Increment the row counter*/
-        	content: counter(rowNumber);  /* Display the row */
-        }
-    </style>
 </head>
 
 <body>
@@ -56,8 +42,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="infectedStat : ${INFECTED_stats}">
-                        <td></td>
+                    <tr th:each="infectedStat, itrStat : ${INFECTED_stats}">
+                        <td th:text="${itrStat.count}"/></td>  <!--This will print the  the number of elements processed so far-->
                         <td th:text="${infectedStat.state}"></td>
                         <td th:text="${infectedStat.region}"></td>
                         <td th:text="${infectedStat.infectedPatientsStats.latestCount}">0</td>

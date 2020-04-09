@@ -15,17 +15,6 @@
     		$('#dataTable').DataTable();
     	});
     </script>
-    
-    <style>
-        table {
-        	counter-reset: rowNumber;  /* Set the row counter to 0 */
-        }
-        
-        table tr td:first-child::before {
-        	counter-increment: rowNumber;  /* Increment the row counter*/
-        	content: counter(rowNumber);  /* Display the row */
-        }
-    </style>
 </head>
 
 <body>
@@ -53,8 +42,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="recoveredStat : ${RECOVERED_stats}">
-                        <td></td>
+                    <tr th:each="recoveredStat, itrStat : ${RECOVERED_stats}">
+                        <td th:text="${itrStat.count}"/></td> 
                         <td th:text="${recoveredStat.state}"></td>
                         <td th:text="${recoveredStat.region}"></td>
                         <td th:text="${recoveredStat.recoveredPatientsStats.latestCount}">0</td>
