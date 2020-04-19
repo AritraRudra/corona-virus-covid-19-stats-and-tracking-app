@@ -87,20 +87,12 @@ public class CovidDataService {
     }
 
     private boolean isLatestDataAvailableByPatientType(final PatientType patientType) {
-        LocalDateTime latestUpdatedOn = null;
-        switch (patientType) {
-            case DEAD :
-                latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfDeadPatients();
-                break;
-            case INFECTED :
-                latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfInfectedPatients();
-                break;
-            case RECOVERED :
-                latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfRecoveredPatients();
-                break;
-            default :
-                throw new IllegalArgumentException("Unexpected value: " + patientType);
-        }
+        LocalDateTime latestUpdatedOn = switch (patientType) {
+            case DEAD -> latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfDeadPatients();
+            case INFECTED -> latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfInfectedPatients();
+            case RECOVERED -> latestUpdatedOn = locationRepo.findLatestUpdatedTimeOfRecoveredPatients();
+            default -> throw new IllegalArgumentException("Unexpected value: " + patientType);
+        };
 
         if (latestUpdatedOn == null)
             return false;
@@ -110,69 +102,47 @@ public class CovidDataService {
     }
 
     public int getCurrentCountByPatientType(final List<LocationStats> stats, final PatientType patientType) {
-        int currentCount = 0;
-        switch (patientType) {
-            case DEAD :
-                currentCount = stats.stream().mapToInt(patient -> patient.getDeadPatientsStats().getLatestCount())
-                .sum();
-                break;
-            case INFECTED :
-                currentCount = stats.stream().mapToInt(patient -> patient.getInfectedPatientsStats().getLatestCount())
-                .sum();
-                break;
-            case RECOVERED :
-                currentCount = stats.stream().mapToInt(patient -> patient.getRecoveredPatientsStats().getLatestCount())
-                .sum();
-                break;
-            default :
-                throw new IllegalArgumentException("Unexpected value: " + patientType);
-        }
-        return currentCount;
+        return switch (patientType) {
+            case DEAD -> stats.stream().mapToInt(patient -> patient.getDeadPatientsStats().getLatestCount()).sum();
+            case INFECTED -> stats.stream().mapToInt(patient -> patient.getInfectedPatientsStats().getLatestCount())
+            .sum();
+            case RECOVERED -> stats.stream().mapToInt(patient -> patient.getRecoveredPatientsStats().getLatestCount())
+            .sum();
+            default -> throw new IllegalArgumentException("Unexpected value: " + patientType);
+        };
     }
 
     public int getNewCountByPatientType(final List<LocationStats> stats, final PatientType patientType) {
-        int newCount = 0;
-        switch (patientType) {
-            case DEAD :
-                int len = stats.get(0).getDeadPatientsStats().getPastCounts().size();
-                newCount = stats.stream().mapToInt(patient -> (patient.getDeadPatientsStats().getLatestCount()
-                        - patient.getDeadPatientsStats().getPastCounts().get(len - 2))).sum();
-                break;
-            case INFECTED :
-                len = stats.get(0).getInfectedPatientsStats().getPastCounts().size();
-                newCount = stats.stream().mapToInt(patient -> (patient.getInfectedPatientsStats().getLatestCount()
-                        - patient.getInfectedPatientsStats().getPastCounts().get(len - 2))).sum();
-                break;
-            case RECOVERED :
-                len = stats.get(0).getRecoveredPatientsStats().getPastCounts().size();
-                newCount = stats.stream().mapToInt(patient -> (patient.getRecoveredPatientsStats().getLatestCount()
-                        - patient.getRecoveredPatientsStats().getPastCounts().get(len - 2))).sum();
-                break;
-            default :
-                throw new IllegalArgumentException("Unexpected value: " + patientType);
-        }
-        return newCount;
+        return switch (patientType) {
+            case DEAD -> stats.stream().mapToInt(
+                    patient -> (patient.getDeadPatientsStats().getLatestCount()
+                            - patient.getDeadPatientsStats().getPastCounts()
+                            .get(stats.get(0).getDeadPatientsStats().getPastCounts().size() - 2)))
+            .sum();
+            case INFECTED -> stats.stream().mapToInt(
+                    patient -> (patient.getInfectedPatientsStats().getLatestCount()
+                            - patient.getInfectedPatientsStats().getPastCounts()
+                            .get(stats.get(0).getInfectedPatientsStats().getPastCounts().size() - 2)))
+            .sum();
+            case RECOVERED -> stats.stream()
+            .mapToInt(patient -> (patient.getRecoveredPatientsStats().getLatestCount()
+                    - patient.getRecoveredPatientsStats().getPastCounts()
+                    .get(stats.get(0).getRecoveredPatientsStats().getPastCounts().size() - 2)))
+            .sum();
+            default -> throw new IllegalArgumentException("Unexpected value: " + patientType);
+        };
     }
 
     public int getNewCountByPatientTypeOld(final List<LocationStats> stats, final PatientType patientType) {
-        int newCount = 0;
-        switch (patientType) {
-            case DEAD :
-                newCount = stats.stream()
-                .mapToInt(patient -> patient.getDeadPatientsStats().getDifferenceSincePreviousDay()).sum();
-                break;
-            case INFECTED :
-                newCount = stats.stream()
-                .mapToInt(patient -> patient.getInfectedPatientsStats().getDifferenceSincePreviousDay()).sum();
-                break;
-            case RECOVERED :
-                newCount = stats.stream()
-                .mapToInt(patient -> patient.getRecoveredPatientsStats().getDifferenceSincePreviousDay()).sum();
-                break;
-            default :
-                throw new IllegalArgumentException("Unexpected value: " + patientType);
-        }
-        return newCount;
+        return switch (patientType) {
+            case DEAD -> stats.stream()
+                    .mapToInt(patient -> patient.getDeadPatientsStats().getDifferenceSincePreviousDay()).sum();
+            case INFECTED -> stats.stream()
+                    .mapToInt(patient -> patient.getInfectedPatientsStats().getDifferenceSincePreviousDay()).sum();
+            case RECOVERED -> stats.stream()
+                    .mapToInt(patient -> patient.getRecoveredPatientsStats().getDifferenceSincePreviousDay()).sum();
+            default -> throw new IllegalArgumentException("Unexpected value: " + patientType);
+        };
     }
 
 }

@@ -49,10 +49,10 @@ public class Covid19Controller {
                         Comparator.comparing(LocationStats::getInfectedPatientsStats))
                 .collect(Collectors.toList()), PatientType.INFECTED);
         // return PatientType.INFECTED.name();
-        System.out.println(PatientType.INFECTED);
-        System.out.println(PatientType.INFECTED.name());
-        System.out.println(PatientType.INFECTED.getValue());
-        System.out.println(PatientType.INFECTED.toString());
+        // System.out.println(PatientType.INFECTED);
+        // System.out.println(PatientType.INFECTED.name());
+        // System.out.println(PatientType.INFECTED.getValue());
+        // System.out.println(PatientType.INFECTED.toString());
         return PatientType.INFECTED.getValue();
     }
 

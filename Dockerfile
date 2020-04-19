@@ -1,5 +1,5 @@
 # Stage one
-FROM maven:3.6.0-jdk-13 AS maven-package
+FROM maven:3.6.3-jdk-14 AS maven-package
 ARG APP_DIR=/app/
 RUN mkdir -p ${APP_DIR}
 WORKDIR ${APP_DIR}
@@ -7,16 +7,16 @@ WORKDIR ${APP_DIR}
 COPY pom.xml .
 
 # build all dependencies for cache/offline use
-RUN mvn dependency:resolve-plugins dependency:go-offline -B
+RUN mvn -B dependency:resolve-plugins dependency:go-offline
 
 COPY src ./src
 
-RUN mvn clean package -B
+RUN mvn -B clean package
 
 
 
 # Stage two
-FROM openjdk:13-jdk AS build-image
+FROM openjdk:14-jdk AS build-image
 
 LABEL maintainer="aritrarudra@gmail.com"
 
@@ -41,5 +41,5 @@ COPY --from=maven-package ${DEPENDENCY}/BOOT-INF/classes /app
 
 EXPOSE 8080
 
-CMD ["java","-cp","app:app/bin/*:app/lib/*","com.covid19.Covid19InfectedTrackingAppApplication"]
-# ENTRYPOINT ["java","-cp","app:app/bin/*:app/lib/*","com.covid19.Covid19InfectedTrackingAppApplication"]
+# CMD ["java","-cp","app:app/bin/*:app/lib/*","com.covid19.Covid19InfectedTrackingAppApplication"]
+ENTRYPOINT ["java","-cp","app:app/bin/*:app/lib/*","com.covid19.Covid19InfectedTrackingAppApplication"]

@@ -2,7 +2,7 @@ language: java
 notifications:
   email: false
 
-script: "mvn clean install -B"
+script: "mvn -B clean install"
 
 jobs:
   include:
@@ -10,11 +10,11 @@ jobs:
     os: linux
     name: precise
     dist: precise
-    jdk: openjdk13
+    jdk: openjdk14
     sudo: false # faster builds
   - stage: build
     os: linux
     name: trusty
     dist: trusty
-    jdk: openjdk13
+    jdk: openjdk14
     sudo: false # faster builds
